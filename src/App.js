@@ -1,10 +1,10 @@
-import { useAddress, useDisconnect, useMetamask } from '@thirdweb-dev/react';
 import ClaimNFT from './components/ClaimNFT';
-
+import Navbar from './components/Navbar'
 function App() {
 
   return (
     <div>
+      <Navbar/>
       <ClaimNFT/>
       
       
