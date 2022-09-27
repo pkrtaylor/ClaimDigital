@@ -1,6 +1,7 @@
-import React from 'react'
+import React, {useState} from 'react'
 import { 
-    
+    useClaimedNFTs,
+    useUnclaimedNFTs,
     useNFTCollection,
     useClaimedNFTSupply, 
     useContractMetadata, 
@@ -8,100 +9,123 @@ import {
     useUnclaimedNFTSupply,
     useAddress, // use addresss allows us to see if th euser is connected to the application 
     useMetamask, // allows user to connect to metamask wallet
-    useDisconnect
+    useDisconnect,
+    useNetworkMismatch,
+    useNetwork,
+    ChainId
 } from "@thirdweb-dev/react";
+import logo from '../tribe_market_logo.png'
 import styled from 'styled-components'
 import gif from '../TribeHoodie.gif'
+import {useParams} from "react-router-dom" 
+import Spinner from './Spinner'
 
 
-const Container =  styled.div`
+const Container = styled.div`
+
     width: 100%;
     height: 100vh;
-    display: flex;
     position: relative;
     overflow: hidden;
     background-color: black;
+    color: white;
+    display: flex;
     justify-content: center;
     align-items: center;
-    color: white;
+    
 
 `
 
 const Wrapper = styled.div`
-
     height: 40rem;
     width: 70rem;
-    background-color: #222;
-    display: flex;
+    position: relative;
     
-
-`
-
-const Left = styled.div`
-
-    flex: 1;
     display: flex;
     flex-direction: column;
+
+    @media screen and (max-width: 800px){
+        
+        width: 350px;
+        flex-direction: column;
+        
+    }
+    
+`
+
+const Top =  styled.div`
+    flex: 1;
+    display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px;
-    margin: 0px 10rem;
+    flex-direction: column;
 `
-
-const Title = styled.h1`
-     margin-bottom: 3rem;
-`
-const Desc =  styled.p`
-
-`
-
-const Right = styled.div`
-
+const Bottom =  styled.div`
     flex: 1;
     display: flex;
-    flex-direction:column;
-    align-items: center ;
-`
-
-const RTop =  styled.div`
-    flex: .75;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
     justify-content: center;
+    align-items: center;
 `
-const Image = styled.img`
-        height: 350px;
-        width: 350px;
-
-`
-
-const RMiddle = styled.div`
-
-        
-        padding: 10px;
-        display: flex;
-        justify-content: space-between;
-        
-        
-`
-const P = styled.p`
-
+const Logo = styled.img`
+    position: absolute;
+    width: 116px;
+    height: 77px;
+    left: 22.3rem;
+    top: -80px; 
     
 
+    @media screen and (max-width: 800px)
+    {
+        width: 86px;
+        height: 47px;
+        left: 22px;
+        top: -52px;
+        
+    }
+
+
 `
 
-const RBottom = styled.div`
-        flex: .25;
-        padding: 10px;
+const Image = styled.img`
+
+    height: 400px;
+    width: 400x;
+    
+
+    @media screen and (max-width: 800px)
+    {
+        height: 300px;
+        width: 300px;
+    }
 `
+
 const Button = styled.button`
+        height: 66px;
+        width: 200px;
+        cursor: pointer;
+        padding: 10px;
+        margin-bottom: 20px;
+        font-weight: bold;
+        border-radius: 10px;
+        background-color: #D9D9D9;
 
-` 
+    @media screen and (max-width: 800px)
+    {
+        height: 55px;
+        width: 150px ;
+    }
 
-const Gif =  styled.img`
+`
 
+const ItemName = styled.h1`
+    
+    margin: 20px;
+    
+`
 
+const P = styled.p`
+
+    margin: 20px;
 `
 
 
@@ -118,15 +142,21 @@ const Gif =  styled.img`
 
 
 
-const contractAddress = '0x6C1a0D05529A66F0E740E545155F70D0b09F3A68'
 
-const ClaimNFT = () => {
+
+
+
+  const ClaimNFT = () => {
+  const { id } = useParams();
+  const contractAddress = id.toString();
   const address = useAddress();
   const disconnectMetamask = useDisconnect();
   const connectMetamask = useMetamask();
   const contract = useNFTDrop(contractAddress) // this is the contract instance of our drop collection 
   //one thing we also need is the meta data  of thecontract
   const {data: contractMetadata}= useContractMetadata(contractAddress)
+  const { data: unclaimedNfts} = useUnclaimedNFTs(contract, { start: 0, count: 100 });
+  const { data: claimedNFTs, isLoading, error } = useClaimedNFTs( contract, { start: 0, count: 100 });
   // this returns a data attribute 
 
   //react sdk from thrid web has a nice hook called useClaimedNFTSupply
@@ -135,69 +165,137 @@ const ClaimNFT = () => {
   //unClaimedNFTSUpply count 
   const {data: unclaimedNFTSupply} = useUnclaimedNFTSupply(contract)
 
+  //third web hook that checks if user is connected to the wrong network
+  const isWrongNetwork = useNetworkMismatch();
+  //the useNetwork() has a feature called switchNetwork
+  //switchNetwork is a function that allows you change to the selectd network
+  const {switchNetwork} = useNetwork();
+  const [claiming, setClaiming] = useState(false)
+  const [assetClaimed, setAssetClaimed] = useState(null)
   const claim = async () => {
+
+    //checking if user has connected
+    
+    if(!address)
+    {
+        connectMetamask();
+        return;
+    }
+
+    // checking if user is on the right network
+
+    if(isWrongNetwork)
+    {   //switchNetwork could be undefined so we check before we run the fucntion
+       switchNetwork && switchNetwork(ChainId.Mumbai())
+       return;
+    }
+
+    setClaiming(true)
+    
 
     try {
         await contract?.claim(1)
-        alert("Minted Successfully")
+        setClaiming(false)
+        setAssetClaimed(true)
     } catch (error) {
-        alert(error)
+        console.log(error)
+        setClaiming(false)
+        setAssetClaimed(false)
     }
     
   }
+  
 
 //   const nftCollection = useNFTCollection(contractAddress)
 //   const getNFTs = async () => {
 //     const nfts = await nftCollection.getAll()
 //     console.log(nfts)    
 // }
+
+  if(!contract || !contractMetadata || !claimedNFTs)
+  {
+    return(
+    <Container>
+        <Spinner name="Loading"/>
+    </Container>
+    )
+  }
+
   return (
 
-        <Container>
-            <Wrapper>
-                <Left>
-                    <Title>Wano</Title>
-                    <Desc>Luffy and his crew has just landed on Onigashima and are ready to start the war with the beast pirates. All the strawhats are ready to go all out and risk their lives in this fight against Yonko Kaido. Theres no turning back!!!</Desc>
-                </Left>
-                <Right>
-                    <RTop>
-                        <Image src={gif}/>
-                        <RMiddle>
-                        <P>Total Minted</P>
-                        <P>
-                        {claimedNFTSupply?.toNumber()} / {" "}
-                        {(claimedNFTSupply?.toNumber() || 0) + 
-                        (unclaimedNFTSupply?.toNumber() || 0)}
-                        </P>
-                    </RMiddle>
-                    </RTop>
-                    
-                    <RBottom>
-                    { address? <Button 
-                        className=""
-                        onClick={disconnectMetamask}>
-                            Disconnect Wallet
-                        </Button> 
-                        :
-                        <Button 
-                        className=""
-                        onClick={connectMetamask}>
-                            Connect Wallet
-                        </Button>
+    <Container>
+        
+    <Wrapper>
+    <Logo src={logo} />
+    <Top>
+            <Image src={gif}/>   
+            <ItemName>Item Name</ItemName>
+            <P>
+                {claimedNFTSupply?.toNumber()} / {" "}
+                {(claimedNFTSupply?.toNumber() || 0) + 
+                (unclaimedNFTSupply?.toNumber() || 0)}{" "}
+                Claimed
+            </P>
+            {
+                assetClaimed === null ? <></> : 
+                (assetClaimed ? 
+                    (<P style={{color:"green"}}>You have successfully claimed this digital asset</P>) 
+                    :
+                    (<P style={{color: "red"}}>Error! Try again.</P>)
                 
-                    }
-                    { address && <Button 
-                        className=""
-                        onClick={claim}>
-                            Mint
-                        </Button> 
-                
-                    }
+                )
+            }
+        </Top>
+        
+        <Bottom>
+            { address && 
+            
+            (claiming ? <Spinner name="Claiming"/> :
+            
+            (
+                assetClaimed === null ? 
+                (
+                    <Button onClick={claim} disabled={claiming}>
+                        Claim Asset    
+                    </Button>
+                ) :
+
+                (assetClaimed ? 
                     
-                    </RBottom>
-                </Right>
-            </Wrapper>
-        </Container>
+                (
+                    <Button>View Now</Button>
+                ) :
+
+                (
+                    <Button>Claim Now</Button>
+                )
+                )
+            )
+                
+            )
+
+            }
+
+            {!address && 
+
+                <>
+                <Button 
+                    className=""
+                    onClick={connectMetamask}>
+                    Connect Wallet
+                </Button>
+                <Button>
+                    Claim Asset    
+                </Button>
+                </>
+
+            }
+
+           
+        
+        </Bottom>
+    </Wrapper>
+</Container>
 
 
 

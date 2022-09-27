@@ -13,7 +13,7 @@ const Container = styled.div`
 const Wrapper = styled.div`
     padding: 10px 20px;
     display: flex; 
-    justify-content: center;
+    justify-content: start;
 `
 const Logo = styled.img`
         height: 100px;
