@@ -1,10 +1,10 @@
 import React from 'react'
 import './Spinner.css'
 
-const Spinner = ({name}) => {
+const Spinner = ({style, name}) => {
   return (
 
-    <div className="loading">{name}
+    <div style={style} className="loading">{name}
     <span></span>
     </div>
     

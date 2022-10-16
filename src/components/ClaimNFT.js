@@ -1,4 +1,5 @@
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
+
 import { 
     useClaimedNFTs,
     useUnclaimedNFTs,
@@ -15,10 +16,12 @@ import {
     ChainId
 } from "@thirdweb-dev/react";
 import logo from '../tribe_market_logo.png'
-import styled from 'styled-components'
+import styled, { useTheme } from 'styled-components'
 import gif from '../TribeHoodie.gif'
-import {useParams} from "react-router-dom" 
+import {useParams, useNavigate} from "react-router-dom" 
 import Spinner from './Spinner'
+import LogoutB from './LogoutB';
+import { Magic } from 'magic-sdk'
 
 
 const Container = styled.div`
@@ -144,9 +147,61 @@ const P = styled.p`
 
 
 
-
+  const magic = new Magic('pk_live_7B9EF38C534AB44E');
 
   const ClaimNFT = () => {
+  const navigate = useNavigate();   
+  //magic section 
+  const [isLoggedIn, setIsLoggedIn] = useState(null)
+  const [logoutClicked, setLogoutClicked] = useState(false) 
+  useEffect(()=>{
+    async function getMagicValues(){
+        try {
+            const isLoggedIn = await magic.user.isLoggedIn();
+            setIsLoggedIn(isLoggedIn)
+            console.log(1)
+        } catch (error) {
+            setIsLoggedIn(isLoggedIn)
+        }
+
+        if(isLoggedIn === false)
+        {
+            navigate('/');
+        }
+        
+    }
+    
+    getMagicValues();
+
+    if(logoutClicked)
+    {
+        console.log(4)
+        async function handlelogout(){
+            await magic.user.logout();
+            navigate('/');
+        }
+        handlelogout();
+        console.log(5)
+
+    }
+  },[isLoggedIn, logoutClicked])
+
+  const logoutClick = () =>{
+    setLogoutClicked(!logoutClicked)
+  }
+
+  
+  if(isLoggedIn)
+  {
+    console.log("Logged in")
+  }
+  else{
+    console.log("not logged in")
+  }
+
+  console.log(logoutClicked)
+
+
   const { id } = useParams();
   const contractAddress = id.toString();
   const address = useAddress();
@@ -216,7 +271,7 @@ const P = styled.p`
   {
     return(
     <Container>
-        <Spinner name="Loading"/>
+        <Spinner style={{top:'0', left:'0'}} name="Loading"/>
     </Container>
     )
   }
@@ -224,7 +279,7 @@ const P = styled.p`
   return (
 
     <Container>
-        
+    <LogoutB onClick={logoutClick} />
     <Wrapper>
     <Logo src={logo} />
     <Top>

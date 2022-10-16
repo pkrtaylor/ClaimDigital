@@ -6,6 +6,7 @@ import {
   Routes,
   Route
 } from "react-router-dom";
+import MagicAuth from './components/MagicAuth';
 
 function App() {
 
@@ -13,6 +14,7 @@ function App() {
     
     <Router>
       <Routes>
+        <Route path = "/" element={<MagicAuth/>}/>
         <Route path = "/nfcscan/:id" element={<NFCScan/>}/>
         <Route path = "/claimnft/:id" element={<ClaimNFT/>}/>
       </Routes>
