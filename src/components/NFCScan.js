@@ -5,17 +5,15 @@ import logo from '../tribe_market_logo.png'
 import { useParams } from 'react-router-dom'
 import { 
     useClaimedNFTs,
-    useUnclaimedNFTs,
-    useNFTCollection,
     useClaimedNFTSupply, 
-    useContractMetadata, 
-    useNFTDrop, 
     useUnclaimedNFTSupply,
     useAddress, // use addresss allows us to see if th euser is connected to the application 
     useMetamask, // allows user to connect to metamask wallet
-    useDisconnect
+    useDisconnect,
+    useContract
 } from "@thirdweb-dev/react";
 import Spinner from './Spinner'
+import { merchandise } from '../merchData'
 
 const Container = styled.div`
 
@@ -128,13 +126,16 @@ const P = styled.p`
 const NFCScan = () => {
 
     const { id } = useParams();
-    const contractAddress = id.toString();
+    const product = merchandise.filter((product) =>{
+        return product.productId === id.toString()
+      })
+    const contractAddress = product[0]?.contractAddress
     const [visualDigitalAsset, setVisualDigitalAsset] = useState(false)
 
     const VDAClick = () =>{
         setVisualDigitalAsset(!visualDigitalAsset)
     }
-    const contract = useNFTDrop(contractAddress) // this is the contract instance of our drop collection 
+    const contract = useContract(contractAddress) // this is the contract instance of our drop collection 
     const { data: claimedNFTs, isLoading, error } = useClaimedNFTs( contract, { start: 0, count: 100 });
 
     //react sdk from thrid web has a nice hook called useClaimedNFTSupply

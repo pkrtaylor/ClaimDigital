@@ -3,10 +3,8 @@ import React, {useEffect, useState} from 'react'
 import { 
     useClaimedNFTs,
     useUnclaimedNFTs,
-    useNFTCollection,
     useClaimedNFTSupply, 
-    useContractMetadata, 
-    useNFTDrop, 
+    useContract, 
     useUnclaimedNFTSupply,
     useAddress, // use addresss allows us to see if th euser is connected to the application 
     useMetamask, // allows user to connect to metamask wallet
@@ -18,11 +16,16 @@ import {
 import logo from '../tribe_market_logo.png'
 import styled, { useTheme } from 'styled-components'
 import gif from '../TribeHoodie.gif'
-import {useParams, useNavigate} from "react-router-dom" 
+import {useParams, useNavigate,} from "react-router-dom" 
 import Spinner from './Spinner'
 import LogoutB from './LogoutB';
 import { Magic } from 'magic-sdk'
-
+import Helmet from 'react-helmet';
+import MagicUserContext from '../MagicUserContext';
+import { useContext } from 'react';
+import { merchandise } from '../merchData';
+import ifUserOwnsItem from './utils/ifUserOwnsItem';
+import axios from 'axios'
 
 const Container = styled.div`
 
@@ -53,6 +56,8 @@ const Wrapper = styled.div`
         flex-direction: column;
         
     }
+
+    
     
 `
 
@@ -132,6 +137,15 @@ const P = styled.p`
 `
 
 
+const LP = styled.button`
+
+    align-self: flex-end;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 10px;
+  
+`
 
 
 
@@ -146,70 +160,71 @@ const P = styled.p`
 
 
 
-
-  const magic = new Magic('pk_live_7B9EF38C534AB44E');
-
-  const ClaimNFT = () => {
-  const navigate = useNavigate();   
-  //magic section 
-  const [isLoggedIn, setIsLoggedIn] = useState(null)
-  const [logoutClicked, setLogoutClicked] = useState(false) 
-  useEffect(()=>{
-    async function getMagicValues(){
-        try {
-            const isLoggedIn = await magic.user.isLoggedIn();
-            setIsLoggedIn(isLoggedIn)
-            console.log(1)
-        } catch (error) {
-            setIsLoggedIn(isLoggedIn)
-        }
-
-        if(isLoggedIn === false)
-        {
-            navigate('/');
-        }
-        
-    }
-    
-    getMagicValues();
-
-    if(logoutClicked)
+  const magic = new Magic('pk_live_B8ED3820154A68B1');
+  
+ 
+  const ClaimNFT = (props) => {
+   
+    const {tableData} = useContext(MagicUserContext)
+    console.log(tableData)
+    if(props.userEmail)
     {
-        console.log(4)
-        async function handlelogout(){
-            await magic.user.logout();
-            navigate('/');
-        }
-        handlelogout();
-        console.log(5)
-
+      console.log(props.userEmail)
     }
-  },[isLoggedIn, logoutClicked])
+
+
+
+
+
+   
+  
+  //magic section 
+  
+  const [logoutClicked, setLogoutClicked] = useState(false) 
+  const { id } = useParams();
+
+
 
   const logoutClick = () =>{
     setLogoutClicked(!logoutClicked)
   }
 
   
-  if(isLoggedIn)
-  {
-    console.log("Logged in")
-  }
-  else{
-    console.log("not logged in")
-  }
+  
 
-  console.log(logoutClicked)
+  
+  props.isLoggedIn === null ? console.log('') : 
+
+  (props.isLoggedIn ? console.log('logged in') : console.log('not logged in'))
+  
 
 
-  const { id } = useParams();
-  const contractAddress = id.toString();
+  
+  console.log(id)
+  const product = merchandise.filter((product) =>{
+    return product.productId === id.toString()
+  })
+  const Navigate = useNavigate();
+  const contractAddress = product[0]?.contractAddress
+  //new development once we get the params we import merchnadise and use id to get contractAddress
   const address = useAddress();
-  const disconnectMetamask = useDisconnect();
+  //const disconnectMetamask = useDisconnect();
   const connectMetamask = useMetamask();
-  const contract = useNFTDrop(contractAddress) // this is the contract instance of our drop collection 
+  const {contract} = useContract(contractAddress) // this is the contract instance of our drop collection 
   //one thing we also need is the meta data  of thecontract
-  const {data: contractMetadata}= useContractMetadata(contractAddress)
+  
+  const [metaData, setMetadata] = useState(false)
+  
+  useEffect(()=>{
+    if(contract)
+    {
+        contract.metadata.get().then(metadata => setMetadata(metadata) )
+    }
+  }, [contract])
+ 
+  
+  
+  
   const { data: unclaimedNfts} = useUnclaimedNFTs(contract, { start: 0, count: 100 });
   const { data: claimedNFTs, isLoading, error } = useClaimedNFTs( contract, { start: 0, count: 100 });
   // this returns a data attribute 
@@ -227,6 +242,45 @@ const P = styled.p`
   const {switchNetwork} = useNetwork();
   const [claiming, setClaiming] = useState(false)
   const [assetClaimed, setAssetClaimed] = useState(null)
+  const [auth, setAuth] = useState(null)
+
+  useEffect(() =>{
+    async function userItemCheck(){
+        //api call to get records
+    
+        try {
+            
+            const {data: records} = await axios.get('https://api.airtable.com/v0/app1VZ3hNzOYLqm50/tblAQaotTZgFVAzeJ?api_key=keyeX0XHalTHr09Dc')
+            var Records = records
+            
+            console.log(1)
+            
+            
+        } catch (error) {
+            console.log(error)
+        }
+        
+        const userOwnsItem = ifUserOwnsItem(id, Records);
+        setAuth(userOwnsItem)
+    }
+
+    userItemCheck();
+    
+  }, [id] )
+
+  console.log(auth)
+
+
+
+
+
+
+
+
+
+
+
+  // claim function
   const claim = async () => {
 
     //checking if user has connected
@@ -261,13 +315,18 @@ const P = styled.p`
   }
   
 
+  const backClick =()=>{
+
+    Navigate('/selection')
+  }
+
 //   const nftCollection = useNFTCollection(contractAddress)
 //   const getNFTs = async () => {
 //     const nfts = await nftCollection.getAll()
 //     console.log(nfts)    
 // }
 
-  if(!contract || !contractMetadata || !claimedNFTs)
+  if(!contract || !metaData || !claimedNFTs || auth === null)
   {
     return(
     <Container>
@@ -275,142 +334,124 @@ const P = styled.p`
     </Container>
     )
   }
+  
 
   return (
 
-    <Container>
-    <LogoutB onClick={logoutClick} />
-    <Wrapper>
-    <Logo src={logo} />
-    <Top>
-            <Image src={gif}/>   
-            <ItemName>Item Name</ItemName>
-            <P>
-                {claimedNFTSupply?.toNumber()} / {" "}
-                {(claimedNFTSupply?.toNumber() || 0) + 
-                (unclaimedNFTSupply?.toNumber() || 0)}{" "}
-                Claimed
-            </P>
-            {
-                assetClaimed === null ? <></> : 
-                (assetClaimed ? 
-                    (<P style={{color:"green"}}>You have successfully claimed this digital asset</P>) 
-                    :
-                    (<P style={{color: "red"}}>Error! Try again.</P>)
-                
-                )
-            }
-        </Top>
+    <div>
+        {
+            auth ? 
+
+            logoutClicked ? (
+                <Container>
+                    <Helmet>
+                <script
+                    src="https://auth.magic.link/pnp/logout"
+                    data-magic-publishable-api-key="pk_live_B8ED3820154A68B1"
+                    data-redirect-uri="/">
+                </script>
+                    </Helmet>
         
-        <Bottom>
-            { address && 
-            
-            (claiming ? <Spinner name="Claiming"/> :
-            
+                </Container>
+            )
+            :
+
             (
-                assetClaimed === null ? 
-                (
-                    <Button onClick={claim} disabled={claiming}>
-                        Claim Asset    
-                    </Button>
-                ) :
-
-                (assetClaimed ? 
+                <Container>
+                <LogoutB onClick={logoutClick} />
+                <Wrapper>
+                <Logo src={logo} />
+                <Top>
+                        <Image src={metaData.image}/>   
+                        <ItemName>{metaData.name}</ItemName>
+                        <P>
+                            {claimedNFTSupply?.toNumber()} / {" "}
+                            {(claimedNFTSupply?.toNumber() || 0) + 
+                            (unclaimedNFTSupply?.toNumber() || 0)}{" "}
+                            Claimed
+                        </P>
+                        {
+                            assetClaimed === null ? <></> : 
+                            (assetClaimed ? 
+                                (<P style={{color:"green"}}>You have successfully claimed this digital asset</P>) 
+                                :
+                                (<P style={{color: "red"}}>Error! Try again.</P>)
+                            
+                            )
+                        }
+                    </Top>
                     
-                (
-                    <Button>View Now</Button>
-                ) :
-
-                (
-                    <Button>Claim Now</Button>
-                )
-                )
-            )
-                
-            )
-
-            }
-
-            {!address && 
-
-                <>
-                <Button 
-                    className=""
-                    onClick={connectMetamask}>
-                    Connect Wallet
-                </Button>
-                <Button>
-                    Claim Asset    
-                </Button>
-                </>
-
-            }
-
-           
-        
-        </Bottom>
-    </Wrapper>
-</Container>
-
-
-
-    // <div className="">
-    //   <div className="">
-    //     <div className="">
-    //       <h1 className="">
-    //         {contractMetadata?.name}
-    //       </h1>
-    //       <p className="">
-    //         {contractMetadata?.description}
-    //       </p>
-    //     </div>
-
-    //     <div className="">
-    //       <div className="">
-    //         <div className="">
-    //           <img className="" src={contractMetadata?.image} />
-    //         </div>
-
-    //         <div className="">
-    //           <p>Total Minted</p>
-    //           <p>
-    //             {claimedNFTSupply?.toNumber()} / {" "}
-    //             {(claimedNFTSupply?.toNumber() || 0) + 
-    //             (unclaimedNFTSupply?.toNumber() || 0)} 
-    //             </p>
-    //         </div>
-
-    //         <div className="">
-            //   { address? <button 
-            //   className=""
-            //   onClick={disconnectMetamask}>
-            //     Disconnect Wallet
-            //   </button> 
-            //   :
-            //   <button 
-            //   className=""
-            //   onClick={connectMetamask}>
-            //     Connect Wallet
-            //   </button>
-                
-            //   }
-    //         </div>
-
-    //         <div className="">
-            //   { address && <button 
-            //   className=""
-            //   onClick={claim}>
-            //     Mint
-            //   </button> 
-                
-            //   }
-    //         </div>
+                    <Bottom>
+                        { address && 
+                        
+                        (claiming ? <Spinner name="Claiming"/> :
+                        
+                        (
+                            assetClaimed === null ? 
+                            (
+                                <Button onClick={claim} disabled={claiming}>
+                                    Claim Asset    
+                                </Button>
+                            ) :
             
-    //       </div>
-    //     </div>
-    //   </div>
-      
-    // </div>
+                            (assetClaimed ? 
+                                
+                            (
+                                <Button>View Now</Button>
+                            ) :
+            
+                            (
+                                <Button>Claim Now</Button>
+                            )
+                            )
+                        )
+                            
+                        )
+            
+                        }
+            
+                        {!address && 
+            
+                            <>
+                            <Button 
+                                className=""
+                                onClick={connectMetamask}>
+                                Connect Wallet
+                            </Button>
+                            </>
+            
+                        }
+            
+                       
+                    
+                    </Bottom>
+                    <LP onClick={()=>{backClick();}}>Selection page</LP>
+                </Wrapper>
+            </Container>
+            ) 
+
+            :
+
+            (
+                <Container>
+                    <Helmet>
+                <script
+                    src="https://auth.magic.link/pnp/logout"
+                    data-magic-publishable-api-key="pk_live_B8ED3820154A68B1"
+                    data-redirect-uri="/">
+                </script>
+                    </Helmet>
+        
+                </Container>
+            )
+        }
+    </div>
+    
+   
+
+
+
+
   );
    
 }

@@ -9,8 +9,8 @@ const Button = styled.button`
         background-color: transparent;
         width: 100px;
         height: 50px;
-        top: 30px;
-        right: 20px;
+        top: 25px;
+        right: 30px;
         border-color: white;
         color: white;
         cursor: pointer;
@@ -26,9 +26,9 @@ const Button = styled.button`
 //when i placed this component in another component
 //the onClick property was not working 
 `
-const LogoutB = props => {
+const LogoutB = ({onClick, style}) => {
   return (
-    <Button onClick={props.onClick}>Logout</Button>
+    <Button onClick={onClick} style={style}>Logout</Button>
 
   )
 }

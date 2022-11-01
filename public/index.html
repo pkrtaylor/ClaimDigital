@@ -27,90 +27,13 @@
     <style>
       * {
         margin: 0;
-        font-family: 'Urbanist', sans-serif;
+        font-family: 'Trocchi', sans-serif;
       }
 
     </style>
     <title>react-javascript-starter</title>
     <script src="https://auth.magic.link/sdk"></script>
-    <script>
-      /* 2️⃣ Initialize Magic Instance */
-      let magic = new Magic("pk_live_7B9EF38C534AB44E");
-
-      
-      /* 3. Implement Render Function */
-          const render = async () => {
-          let html = '';
-
-        /*
-          For this tutorial, our callback route is simply "/callback"
-        */
-        if (window.location.pathname === '/callback') {
-          try {
-            /* Complete the "authentication callback" */
-            await magic.auth.loginWithCredential();
-            console.log(1)
-            /* Get user metadata including email */
-            const userMetadata = await magic.user.getMetadata();
-            console.log(2)
-
-            html = `
-              <h1>Current user: ${userMetadata.email}</h1>
-              <button onclick="handleLogout()">Logout</button>
-            `;
-          } catch {
-            /* In the event of an error, we'll go back to the login page */
-            window.location.href = window.location.origin;
-          }
-        } else {
-          const isLoggedIn = await magic.user.isLoggedIn();
-          console.log(3)
-
-          /* Show login form if user is not logged in */
-          html = `
-            <h1>Please sign up or login</h1>
-            <form onsubmit="handleLogin(event)">
-              <input type="email" name="email" required="required" placeholder="Enter your email" />
-              <button type="submit">Send</button>
-            </form>
-          `;
-
-          if (isLoggedIn) {
-            /* Get user metadata including email */
-            const userMetadata = await magic.user.getMetadata();
-            console.log(4)
-            html = `
-              <h1>Current user: ${userMetadata.email}</h1>
-              <button onclick="handleLogout()">Logout</button>
-            `;
-          }
-        }
-
-        document.getElementById('root').innerHTML = html;
-      };
-
-        
-      /* 4. Implement Login Handler */
-      const handleLogin = async e => {
-        e.preventDefault();
-        const email = new FormData(e.target).get('email');
-        const redirectURI = `${window.location.origin}/claimnft/0x6C1a0D05529A66F0E740E545155F70D0b09F3A68`; // 👈 This will be our callback URI
-        if (email) {
-          /* One-liner login 🤯 */
-          await magic.auth.loginWithMagicLink({ email, redirectURI }); // 👈 Notice the additional parameter!
-          console.log(5)
-        }
-        render();
-      };
-
-
-      /* 5. Implement Logout Handler */
-      const handleLogout = async () => {
-        await magic.user.logout();
-        console.log(6)
-        render();
-      };
-    </script>
+   
   </head>
   <body >
     <noscript>You need to enable JavaScript to run this app.</noscript>
