@@ -54,9 +54,10 @@ function App() {
     try {
 
       
-      const res2 = await magic.oauth.getRedirectResult();
+      await magic.oauth.getRedirectResult();
       const res = await magic.user.getMetadata();
-      console.log(res2)
+      console.log(res)
+      console.log(res.email)
       setUserEmail(res?.email)
       res && localStorage.setItem('email', res.email)
       
@@ -85,7 +86,7 @@ function App() {
   }, [isLoggedIn, userEmail])
 
  
-  localStorage.getItem('ifUserOwnsItem') && console.log(localStorage.getItem('ifUserOwnsItem'))
+  
 
 
   return (
@@ -96,12 +97,7 @@ function App() {
         <Route path = "/" element={<Login isLoggedIn={isLoggedIn}/>}/>
         <Route path = "/nfcscan/:id" element={<NFCScan/>}/>
         <Route path = "/claimnft/:id" 
-          element={isLoggedIn === null ?
-          (<Container>
-            <Spinner style={{top:'0', left:'0'}} name="Loading"/>
-          </Container>) 
-          :
-          ((isLoggedIn && localStorage.getItem('ifUserOwnsItem')) ? <ClaimNFT isLoggedIn={isLoggedIn} userEmail = {userEmail}/> : <Navigate to="/" />)  }/>
+          element={<ClaimNFT isLoggedIn={isLoggedIn} userEmail = {userEmail}/> }/>
           <Route path= "/selection" element={<Selection/>}/>
       </Routes>
     </Router>
@@ -110,3 +106,13 @@ function App() {
 }
 
 export default App;
+
+
+
+{/* <Route path = "/claimnft/:id" 
+          element={isLoggedIn === null ?
+          (<Container>
+            <Spinner style={{top:'0', left:'0'}} name="Loading"/>
+          </Container>) 
+          :
+          (isLoggedIn ? <ClaimNFT isLoggedIn={isLoggedIn} userEmail = {userEmail}/> : <Navigate to="/" />)  }/> */}

@@ -340,9 +340,9 @@ const LP = styled.button`
 
     <div>
         {
-            auth ? 
+            
 
-            logoutClicked ? (
+           ( logoutClicked ? (
                 <Container>
                     <Helmet>
                 <script
@@ -429,7 +429,117 @@ const LP = styled.button`
                 </Wrapper>
             </Container>
             ) 
+           )
+        
+        }
+    </div>
+    
+   
 
+
+
+
+  );
+   
+}
+
+export default ClaimNFT
+
+
+
+
+{/* <div>
+        {
+            auth ? 
+
+           ( logoutClicked ? (
+                <Container>
+                    <Helmet>
+                <script
+                    src="https://auth.magic.link/pnp/logout"
+                    data-magic-publishable-api-key="pk_live_B8ED3820154A68B1"
+                    data-redirect-uri="/">
+                </script>
+                    </Helmet>
+        
+                </Container>
+            )
+            :
+
+            (
+                <Container>
+                <LogoutB onClick={logoutClick} />
+                <Wrapper>
+                <Logo src={logo} />
+                <Top>
+                        <Image src={metaData.image}/>   
+                        <ItemName>{metaData.name}</ItemName>
+                        <P>
+                            {claimedNFTSupply?.toNumber()} / {" "}
+                            {(claimedNFTSupply?.toNumber() || 0) + 
+                            (unclaimedNFTSupply?.toNumber() || 0)}{" "}
+                            Claimed
+                        </P>
+                        {
+                            assetClaimed === null ? <></> : 
+                            (assetClaimed ? 
+                                (<P style={{color:"green"}}>You have successfully claimed this digital asset</P>) 
+                                :
+                                (<P style={{color: "red"}}>Error! Try again.</P>)
+                            
+                            )
+                        }
+                    </Top>
+                    
+                    <Bottom>
+                        { address && 
+                        
+                        (claiming ? <Spinner name="Claiming"/> :
+                        
+                        (
+                            assetClaimed === null ? 
+                            (
+                                <Button onClick={claim} disabled={claiming}>
+                                    Claim Asset    
+                                </Button>
+                            ) :
+            
+                            (assetClaimed ? 
+                                
+                            (
+                                <Button>View Now</Button>
+                            ) :
+            
+                            (
+                                <Button>Claim Now</Button>
+                            )
+                            )
+                        )
+                            
+                        )
+            
+                        }
+            
+                        {!address && 
+            
+                            <>
+                            <Button 
+                                className=""
+                                onClick={connectMetamask}>
+                                Connect Wallet
+                            </Button>
+                            </>
+            
+                        }
+            
+                       
+                    
+                    </Bottom>
+                    <LP onClick={()=>{backClick();}}>Selection page</LP>
+                </Wrapper>
+            </Container>
+            ) 
+           )
             :
 
             (
@@ -445,15 +555,4 @@ const LP = styled.button`
                 </Container>
             )
         }
-    </div>
-    
-   
-
-
-
-
-  );
-   
-}
-
-export default ClaimNFT
+    </div> */}
